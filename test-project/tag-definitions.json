@@ -1,0 +1,6 @@
+[
+	[ "LOC-CITY",    "Location: City",    "#4600C4" ],
+	[ "LOC-COUNTRY", "Location: Country", "#E82200" ],
+	[ "PER-TITLE",   "Person: Title",     "#FFD500" ],
+	[ "PER-NAME",    "Person: Name",      "#81FF00" ]
+]
