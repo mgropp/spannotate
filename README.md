@@ -1,5 +1,5 @@
-spannotate
-==========
+[sp(an]notate)
+==============
 
 Annotate spans of a text.
 
