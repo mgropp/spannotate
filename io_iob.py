@@ -39,6 +39,7 @@ class IobIo(object):
 			lambda x: os.path.basename(x[:-4]),
 			glob(os.path.join(self.directory, "*.txt"))
 		))
+		self.segments.sort()
 		
 		# tokens: { segment_id: [ token ] }
 		self.tokens = {}

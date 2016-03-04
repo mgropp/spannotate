@@ -7,6 +7,7 @@ import mimetypes
 import logging
 from wsgiref.simple_server import make_server
 
+import dependencies
 from config import host
 from config import port
 
@@ -164,15 +165,8 @@ def app(env, start_response):
 		return serve_file(path, env, start_response)
 
 
-if not os.path.isfile(os.path.join(sys.path[0], "bower_components/jquery/dist/jquery.min.js")):
-	import subprocess
-	try:
-		subprocess.check_call([ "bower", "install", "jquery#~2.2.1" ], cwd=sys.path[0])
-	except Exception as e:
-		print("Could not download jquery (bower install jquery)!", file=sys.stderr)
-		print(e, file=sys.stderr)
-		sys.exit(2)
-
+if not dependencies.resolve():
+	sys.exit(2)
 
 server = make_server(host, port, app)
 print('Serving HTTP on %sport %d...' % ('' if host == '' else '%s, ' % host, port))

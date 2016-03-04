@@ -2,12 +2,20 @@
 <html>
 <head>
 <meta charset="utf8">
-<title>Spannotate</title>
+<title>[sp(an]notate)</title>
+
+<link rel="stylesheet" href="bower_components/jquery-ui/themes/smoothness/theme.css">
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
 
 <style type="text/css">
 body {
 	font-family: sans-serif;
 	background-color: #f6f6f6;
+}
+
+#toolbar {
+	margin-left: 2ex;
 }
 
 #document {
@@ -19,6 +27,28 @@ body {
 	width: 40em;
 	background-repeat: no-repeat;
 	background-position: 100% 100%;
+	vertical-align: top;
+}
+
+#tagList {
+	background-color: #f0f0f0;
+	border: 1px solid #999999;
+	padding: 0.5ex;
+	padding-right: 2ex;
+	margin-top: 2ex;
+	vertical-align: top;
+}
+
+#segments h5 {
+	margin-top: 3ex;
+	margin-bottom: 4px;
+}
+
+#segments select {
+	margin-top: 4px;
+	margin-bottom: 4px;
+	width: 100%;
+	height: 40ex;
 }
 
 #tagLog {
@@ -64,9 +94,6 @@ body {
 
 .SelectedRight {
 	background-color: #90D5F5;
-	//border-top: 1px solid #0089C8;
-	//border-bottom: 1px solid #0089C8;
-	//border-right: 1px solid #0089C8;
 	border-bottom: 2px solid transparent;
 	border-radius: 0ex 0.5ex 0.5ex 0ex;
 }
@@ -83,14 +110,6 @@ body {
 	background-size: 100% 2px, 2px 50%, 2px 50%;
 }
 
-.TagList {
-	background-color: #f0f0f0;
-	border: 1px solid #999999;
-	border-radius: 10px;
-	padding: 0.5ex;
-	padding-right: 2ex;
-}
-
 #tags a {
 	cursor: pointer;
 }
@@ -98,8 +117,6 @@ body {
 #tagged {
 }
 </style>
-
-<script src="bower_components/jquery/dist/jquery.min.js"></script>
 
 <script>
 var segmentIndex = -1;
@@ -115,8 +132,10 @@ var tagged = [];
 
 var allowOverlap = false;
 
-function loadSegment(segment) {
-	console.log("Retrieving tokens...");
+function loadSegment(segmentIndex) {
+	var segment = segments[segmentIndex];
+	
+	console.log("Retrieving tokens for segment »" + segment + "«...");
 	$.ajax(
 		"/",
 		{ data: { action: "get_tokens", segment: segment } }
@@ -143,12 +162,20 @@ function loadSegment(segment) {
 				var end = newTags[i][2];
 				addTagDecoration(tag, start, end);
 			}
+			
+			$("#title").text(segment);
 		}).error(function(jqxhr, textStatus, errorThrown) {
 			alert(errorThrown);
 		});
 	}).error(function(jqxhr, textStatus, errorThrown) {
 		alert(errorThrown);
 	});
+}
+
+function updateSegments() {
+	for (var i = 0; i < segments.length; i++) {
+		$("#segmentList").append($('<option></option>').attr("value", segments[i]).text(segments[i]));
+	}
 }
 
 function updateSelection(spans, startIndex, endIndex) {
@@ -457,7 +484,7 @@ function previousSegment() {
 	}
 	
 	segmentIndex--;
-	loadSegment(segments[segmentIndex]);
+	loadSegment(segmentIndex);
 }
 
 function nextSegment() {
@@ -467,29 +494,55 @@ function nextSegment() {
 	}
 	
 	segmentIndex++;
-	loadSegment(segments[segmentIndex]);
+	loadSegment(segmentIndex);
 }
 </script>
 
 </head>
 
 <body>
-<h1>Tagging</h1>
+<h1 id="title">Tagging</h1>
+
+<form id="toolbar">
+	<input type="button" id="previous" value="◂">
+	<input type="button" id="next" value="▸">
+	<input type="button" id="retransmit" value="⇈">
+	<input type="button" id="undo" value="↶">
+</form>
+
 <div id="document"></div>
 <div style="display: inline-block">
-	<div class="TagList">
+	<div id="tagList">
 		<div id="tags"></div>
 	</div>
-	<div style="text-align: center; padding: 5px">
-		<input type="button" value="Retransmit all" onclick="alert('TODO')">
-		<input type="button" value="Undo" onclick="alert('TODO')">
-		<input type="button" value="&lt;" onclick="previousSegment()">
-		<input type="button" value="&gt;" onclick="nextSegment()">
+	<div id="segments">
+		<h5>Segments:</h5>
+		<form>
+			<select id="segmentList" multiple>
+			</select>
+			<input type="button" id="openSegment" value="↪">
+		</form>
 	</div>
 </div>
+
 <p id="tagLog"></p>
 
 <script>
+$(function() {
+	$("#previous").button().click(previousSegment);
+	$("#next").button().click(nextSegment);
+	$("#retransmit").button().click(function() {
+		alert("TODO");
+	});
+	$("#undo").button().click(function() {
+		alert("TODO");
+	});
+	$("#openSegment").button().click(function() {
+		segmentIndex = $("#segmentList").prop("selectedIndex");
+		loadSegment(segmentIndex);
+	});
+});
+
 console.log("Retrieving tag definitions...");
 $.ajax(
 	"/",
@@ -502,12 +555,13 @@ $.ajax(
 		{ data: { action: "get_segments" } }
 	).done(function(newSegments) {
 		segments = newSegments;
+		updateSegments();
 		if (segments.length == 0) {
 			alert("Error: No segments received!");
 			return;
 		}
 		segmentIndex = 0;
-		loadSegment(segments[0]);
+		loadSegment(0);
 	}).error(function(jqxhr, textStatus, errorThrown) {
 		alert(errorThrown);
 	});
