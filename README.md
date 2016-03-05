@@ -5,15 +5,22 @@ Annotate spans of a text.
 
 (Very early stage of development...)
 
-Dependencies:
+Dependencies
 ------------
 
 * Python 3
 * [bower](http://bower.io/)
 
+Running
+-------
+`./spannotate.py <project dir>`
 
-Example:
---------
+Project directories
+-------------------
+TODO
+
+Example
+-------
 
 Es ist süllen alle vnser Burger und Burgerin kauflewte und fürleute ,
 von [Nürembergen]<sub>Location</sub> die yetzonden czü
