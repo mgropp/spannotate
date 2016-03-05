@@ -14,18 +14,10 @@ from config import port
 # from io_dummy import DummyIo
 from io_iob import IobIo
 
-if len(sys.argv) < 2:
-	print("Missing argument! %s <annotation directory>" % sys.argv[0], file=sys.stderr)
-	sys.exit(1)
-
-io = IobIo(sys.argv[1])
-# io = DummyIo()
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 mimetypes.init()
-server_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 unquote_plus = urllib.unquote_plus if hasattr(urllib, 'unquote_plus') else urllib.parse.unquote_plus
 
@@ -42,7 +34,7 @@ def file_wrapper(filename, block_size):
 			buf = f.read(block_size)
 
 
-def serve_file(path, env, start_response, server_dir=server_dir, block_size=8192):
+def serve_file(path, env, start_response, server_dir, block_size=8192):
 	if path[0] == '/':
 		path = path[1:]
 	
@@ -68,106 +60,124 @@ def serve_file(path, env, start_response, server_dir=server_dir, block_size=8192
 		return file_wrapper(abspath, block_size)
 
 
-def app(env, start_response):
-	path = env['PATH_INFO']
-	query_str = env.get('QUERY_STRING' ,'')
+def make_app(server_dir, project_dir):
+	io = IobIo(project_dir)
+	# io = DummyIo()
 	
-	if path == '/' and len(query_str) > 0:
-		args = dict(map(lambda y: (unquote_plus(y[0]), unquote_plus(y[1])), map(lambda x: tuple(x.split('=', 1)), query_str.split('&'))))
-	
-		action = args.get('action', None)
-		if action == 'get_tag_definitions':
-			try:
-				tag_definitions = io.get_tag_definitions()
-			except Exception as e:
-				logger.critical("%s: %s" % (type(e).__name__, e))
-				return error_message('422 Bad parameters.', start_response)
-			
-			start_response('200 OK.', [ ('Content-Type', 'application/json') ])
-			return [ json.dumps(tag_definitions).encode('utf-8') ]
+	def app(env, start_response):
+		path = env['PATH_INFO']
+		query_str = env.get('QUERY_STRING' ,'')
 		
-		elif action == 'get_segments':
-			try:
-				segments = io.get_segments()
-			except Exception as e:
-				logger.critical("%s: %s" % (type(e).__name__, e))
-				return error_message('422 Bad parameters.', start_response)
-			
-			start_response('200 OK.', [ ('Content-Type', 'application/json') ])
-			return [ json.dumps(segments).encode('utf-8') ]
+		if path == '/' and len(query_str) > 0:
+			args = dict(map(lambda y: (unquote_plus(y[0]), unquote_plus(y[1])), map(lambda x: tuple(x.split('=', 1)), query_str.split('&'))))
 		
-		elif action == 'get_tokens':
-			segment = args.get("segment", None)
-			if segment is None:
+			action = args.get('action', None)
+			if action == 'get_tag_definitions':
+				try:
+					tag_definitions = io.get_tag_definitions()
+				except Exception as e:
+					logger.critical("%s: %s" % (type(e).__name__, e))
+					return error_message('422 Bad parameters.', start_response)
+				
+				start_response('200 OK.', [ ('Content-Type', 'application/json') ])
+				return [ json.dumps(tag_definitions).encode('utf-8') ]
+			
+			elif action == 'get_segments':
+				try:
+					segments = io.get_segments()
+				except Exception as e:
+					logger.critical("%s: %s" % (type(e).__name__, e))
+					return error_message('422 Bad parameters.', start_response)
+				
+				start_response('200 OK.', [ ('Content-Type', 'application/json') ])
+				return [ json.dumps(segments).encode('utf-8') ]
+			
+			elif action == 'get_tokens':
+				segment = args.get("segment", None)
+				if segment is None:
+					return error_message('422 Bad parameters.', start_response)
+				
+				try:
+					tokens = io.get_tokens(segment)
+				except Exception as e:
+					logger.critical("%s: %s" % (type(e).__name__, e))
+					return error_message('422 Bad parameters.', start_response)
+				
+				start_response('200 OK.', [ ('Content-Type', 'application/json') ])
+				return [ json.dumps(tokens).encode('utf-8') ]
+			
+			elif action == "get_tags":
+				segment = args.get("segment", None)
+				if segment is None:
+					return error_message('422 Bad parameters.', start_response)
+				
+				try:
+					tags = io.get_tags(segment)
+				except Exception as e:
+					logger.critical("%s: %s" % (type(e).__name__, e))
+					return error_message('422 Bad parameters.', start_response)
+				
+				start_response('200 OK.', [ ('Content-Type', 'application/json') ])
+				return [ json.dumps(tags).encode('utf-8') ]
+			
+			elif action == "set_tag":
+				segment = args.get("segment", None)
+				tag = args.get("tag", None)
+				start = args.get("start", None)
+				end = args.get("end", None)
+				
+				if segment is None or tag is None or start is None or end is None:
+					return error_message('422 Bad parameters.', start_response)
+				
+				try:
+					io.set_tag(segment, tag, start, end)
+				except Exception as e:
+					logger.critical("%s: %s" % (type(e).__name__, e))
+					return error_message('422 Bad parameters.', start_response)
+				
+				start_response('200 OK.', [ ('Content-Type', 'text/plain') ])
+				return [ "OK".encode('utf-8') ]
+			
+			elif action == "remove_tag":
+				segment = args.get("segment", None)
+				tag = args.get("tag", None)
+				start = args.get("start", None)
+				end = args.get("end", None)
+				
+				try:
+					io.remove_tag(segment, tag, start, end)
+				except Exception as e:
+					logger.critical("%s: %s" % (type(e).__name__, e))
+					return error_message('422 Bad parameters.', start_response)
+				
+				start_response('200 OK.', [ ('Content-Type', 'text/plain') ])
+				return [ "OK".encode('utf-8') ]
+			
+			else:
 				return error_message('422 Bad parameters.', start_response)
-			
-			try:
-				tokens = io.get_tokens(segment)
-			except Exception as e:
-				logger.critical("%s: %s" % (type(e).__name__, e))
-				return error_message('422 Bad parameters.', start_response)
-			
-			start_response('200 OK.', [ ('Content-Type', 'application/json') ])
-			return [ json.dumps(tokens).encode('utf-8') ]
-		
-		elif action == "get_tags":
-			segment = args.get("segment", None)
-			if segment is None:
-				return error_message('422 Bad parameters.', start_response)
-			
-			try:
-				tags = io.get_tags(segment)
-			except Exception as e:
-				logger.critical("%s: %s" % (type(e).__name__, e))
-				return error_message('422 Bad parameters.', start_response)
-			
-			start_response('200 OK.', [ ('Content-Type', 'application/json') ])
-			return [ json.dumps(tags).encode('utf-8') ]
-		
-		elif action == "set_tag":
-			segment = args.get("segment", None)
-			tag = args.get("tag", None)
-			start = args.get("start", None)
-			end = args.get("end", None)
-			
-			if segment is None or tag is None or start is None or end is None:
-				return error_message('422 Bad parameters.', start_response)
-			
-			try:
-				io.set_tag(segment, tag, start, end)
-			except Exception as e:
-				logger.critical("%s: %s" % (type(e).__name__, e))
-				return error_message('422 Bad parameters.', start_response)
-			
-			start_response('200 OK.', [ ('Content-Type', 'text/plain') ])
-			return [ "OK".encode('utf-8') ]
-		
-		elif action == "remove_tag":
-			segment = args.get("segment", None)
-			tag = args.get("tag", None)
-			start = args.get("start", None)
-			end = args.get("end", None)
-			
-			try:
-				io.remove_tag(segment, tag, start, end)
-			except Exception as e:
-				logger.critical("%s: %s" % (type(e).__name__, e))
-				return error_message('422 Bad parameters.', start_response)
-			
-			start_response('200 OK.', [ ('Content-Type', 'text/plain') ])
-			return [ "OK".encode('utf-8') ]
-		
 		else:
-			return error_message('422 Bad parameters.', start_response)
-	else:
-		if path == '' or path == '/':
-			path = '/index.html'
-		return serve_file(path, env, start_response)
+			if path == '' or path == '/':
+				path = '/index.html'
+			return serve_file(path, env, start_response, server_dir)
+	
+	return app
 
 
-if not dependencies.resolve():
-	sys.exit(2)
+def serve(server_dir, project_dir):
+	server = make_server(host, port, make_app(server_dir, project_dir))
+	print('Serving HTTP on %sport %d...' % ('' if host == '' else '%s, ' % host, port))
+	server.serve_forever()
 
-server = make_server(host, port, app)
-print('Serving HTTP on %sport %d...' % ('' if host == '' else '%s, ' % host, port))
-server.serve_forever()
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		print("Missing argument! %s <annotation directory>" % sys.argv[0], file=sys.stderr)
+		sys.exit(1)
+	
+	server_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+	project_dir = sys.argv[1]
+	
+	if not dependencies.resolve(server_dir):
+		sys.exit(2)
+	
+	serve(server_dir, project_dir)

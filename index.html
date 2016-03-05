@@ -14,6 +14,10 @@ body {
 	background-color: #f6f6f6;
 }
 
+h1 {
+	margin-left: 1ex;
+}
+
 #toolbar {
 	margin-left: 2ex;
 }
@@ -37,6 +41,10 @@ body {
 	padding-right: 2ex;
 	margin-top: 2ex;
 	vertical-align: top;
+}
+
+#tagList li {
+	margin-bottom: 0.5ex;
 }
 
 #segments h5 {
@@ -462,7 +470,7 @@ function createTagList(container, tags) {
 		};
 	}
 	
-	var a = $("<a></a>").text("Clear selected");
+	var a = $('<a title="Press 0 to remove all tags from the selection."></a>').text("Clear selected");
 	a.click(setTagFunction(-1));
 	a.css("border-bottom", "2px dotted gray");
 	var li = $('<li value="0"></li>');
@@ -470,7 +478,7 @@ function createTagList(container, tags) {
 	li.appendTo(list);
 	
 	for (var i = 0; i < tags.length; i++) {
-		var a = $("<a></a>").text(tags[i][0]);
+		var a = $('<a title="Press ' + (i+1) + ' to add this tag to the selection."></a>').text(tags[i][0]);
 		a.click(setTagFunction(i));
 		a.css("border-bottom", "2px solid " + tags[i][1]);
 		var li = $("<li></li>");

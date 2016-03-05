@@ -5,6 +5,8 @@ import sys
 import os.path
 import subprocess
 
+from config import bower
+
 dependencies = [
 	(
 		"jquery#~2.2.1",
@@ -20,11 +22,11 @@ dependencies = [
 	)
 ]
 
-def resolve(dependencies=dependencies, basedir=sys.path[0]):
+def resolve(basedir=sys.path[0], dependencies=dependencies):
 	for (name, filename) in dependencies:
 		if not os.path.isfile(os.path.join(basedir, filename)):
 			try:
-				subprocess.check_call([ "bower", "install", name ], cwd=basedir)
+				subprocess.check_call([ bower, "install", name ], cwd=basedir)
 			except Exception as e:
 				print("Could not download %s (bower install %s)!" % (name, name), file=sys.stderr)
 				print(e, file=sys.stderr)

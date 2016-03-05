@@ -9,3 +9,8 @@ port = 8000
 # '' listens on all interfaces.
 # default: host = 'localhost'
 host = ''
+
+
+# bower
+# path to bower binary
+bower = "bower"
