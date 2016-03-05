@@ -78,9 +78,6 @@ body {
 
 .SelectedLeft {
 	background-color: #90D5F5;
-	//border-left: 1px solid #0089C8;
-	//border-top: 1px solid #0089C8;
-	//border-bottom: 1px solid #0089C8;
 	border-bottom: 2px solid transparent;
 	border-radius: 0.5ex 0ex 0ex 0.5ex;
 }
@@ -88,8 +85,6 @@ body {
 .SelectedMiddle {
 	background-color: #90D5F5;
 	border-bottom: 2px solid transparent;
-	//border-top: 1px solid #0089C8;
-	//border-bottom: 1px solid #0089C8;
 }
 
 .SelectedRight {
@@ -467,6 +462,13 @@ function createTagList(container, tags) {
 		};
 	}
 	
+	var a = $("<a></a>").text("Clear selected");
+	a.click(setTagFunction(-1));
+	a.css("border-bottom", "2px dotted gray");
+	var li = $('<li value="0"></li>');
+	a.appendTo(li);
+	li.appendTo(list);
+	
 	for (var i = 0; i < tags.length; i++) {
 		var a = $("<a></a>").text(tags[i][0]);
 		a.click(setTagFunction(i));
@@ -479,7 +481,7 @@ function createTagList(container, tags) {
 
 function previousSegment() {
 	if (segmentIndex <= 0) {
-		alert("Error: Already at first segment!");
+		alert("Already at first segment!");
 		return;
 	}
 	
@@ -489,7 +491,7 @@ function previousSegment() {
 
 function nextSegment() {
 	if (segmentIndex >= segments.length-1) {
-		alert("Error: Already at last segment!");
+		alert("Already at last segment!");
 		return;
 	}
 	
@@ -504,10 +506,10 @@ function nextSegment() {
 <h1 id="title">Tagging</h1>
 
 <form id="toolbar">
-	<input type="button" id="previous" value="◂">
-	<input type="button" id="next" value="▸">
-	<input type="button" id="retransmit" value="⇈">
-	<input type="button" id="undo" value="↶">
+	<input type="button" id="previous" value="◂" title="open previous segment (←)">
+	<input type="button" id="next" value="▸" title="open next segment (→)">
+	<input type="button" id="retransmit" value="⇈" title="retransmit all">
+	<input type="button" id="undo" value="↶" title="undo (ctrl+z)">
 </form>
 
 <div id="document"></div>
@@ -520,7 +522,7 @@ function nextSegment() {
 		<form>
 			<select id="segmentList" multiple>
 			</select>
-			<input type="button" id="openSegment" value="↪">
+			<input type="button" id="openSegment" value="↪" title="open selected segment">
 		</form>
 	</div>
 </div>
@@ -536,6 +538,10 @@ $(function() {
 	});
 	$("#undo").button().click(function() {
 		alert("TODO");
+	});
+	$("#segmentList").dblclick(function() {
+		segmentIndex = $("#segmentList").prop("selectedIndex");
+		loadSegment(segmentIndex);
 	});
 	$("#openSegment").button().click(function() {
 		segmentIndex = $("#segmentList").prop("selectedIndex");
@@ -570,7 +576,13 @@ $.ajax(
 });
 
 $(document).keypress(function(event) {
-	if (event.key >= '0' && event.key <= '9') {
+	if (event.key == "ArrowLeft") {
+		previousSegment();
+	} else if (event.key == "ArrowRight") {
+		nextSegment();
+	} else if (event.key == 'z' && event.ctrlKey) {
+		alert("UNDO: TODO");
+	} else if (event.key >= '0' && event.key <= '9') {
 		setTag(parseInt(event.key) - 1);
 	}
 });
