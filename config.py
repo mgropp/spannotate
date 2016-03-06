@@ -10,7 +10,7 @@ port = 8000
 # default: host = 'localhost'
 host = ''
 
-
 # bower
 # path to bower binary
+# e.g. "/usr/bin/bower" or "C:\\some\\directory\\bower.exe"
 bower = "bower"

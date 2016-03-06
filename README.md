@@ -13,6 +13,9 @@ Dependencies
 
 Running
 -------
+Adjust configuration in `config.py`.
+
+Then run:
 `./spannotate.py <project dir>`
 
 Project directories
