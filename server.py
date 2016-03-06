@@ -153,8 +153,21 @@ def make_app(server_dir, project_dir):
 				start_response('200 OK.', [ ('Content-Type', 'text/plain') ])
 				return [ "OK".encode('utf-8') ]
 			
+			elif action == "clear_tags":
+				segment = args.get("segment", None)
+				
+				try:
+					io.clear_tags(segment)
+				except Exception as e:
+					logger.critical("%s: %s" % (type(e).__name__, e))
+					return error_message('422 Bad parameters.', start_response)
+				
+				start_response('200 OK.', [ ('Content-Type', 'text/plain') ])
+				return [ "OK".encode('utf-8') ]
+			
 			else:
 				return error_message('422 Bad parameters.', start_response)
+		
 		else:
 			if path == '' or path == '/':
 				path = '/index.html'

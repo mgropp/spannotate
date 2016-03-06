@@ -16,9 +16,7 @@ var undoManager = new UndoManager();
 function init() {
 	$("#previous").button().click(previousSegment);
 	$("#next").button().click(nextSegment);
-	$("#retransmit").button().click(function() {
-		alert("TODO");
-	});
+	$("#retransmit").button().click(retransmit);
 	$("#undo").button().click(function() {
 		undoManager.undo();
 	});
@@ -324,7 +322,6 @@ function removeTags(startIndex, endIndex) {
 		});
 		
 		$("#document").css("background-image", 'url("wait.gif")');
-		
 		function submit(index) {
 			$.ajax(
 				"/",
@@ -487,4 +484,35 @@ function nextSegment() {
 	}
 	
 	openSegment(segmentIndex+1);
+}
+
+function retransmit() {
+	$("#document").css("background-image", 'url("wait.gif")');
+	
+	function submit(index) {
+		$.ajax(
+			"/",
+			{ data: { action: "set_tag", segment: segments[segmentIndex], tag: tagged[index][0], start: tagged[index][1], end: tagged[index][2] } }
+		).done(function() {
+			index++;
+			if (index >= tagged.length) {
+				$("#document").css("background-image", "none");
+			} else {
+				submit(index);
+			}
+		}).error(function(jqxhr, textStatus, errorThrown) {
+			$("#document").css("background-image", "none");
+			alert(textStatus + "\n" + errorThrown);
+		});
+	}
+	
+	$.ajax(
+		"/",
+		{ data: { action: "clear_tags", segment: segments[segmentIndex] } }
+	).done(function() {
+		submit(0);
+	}).error(function(jqxhr, textStatus, errorThrown) {
+		$("#document").css("background-image", "none");
+		alert(textStatus + "\n" + errorThrown);
+	});
 }

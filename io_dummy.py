@@ -41,3 +41,7 @@ class DummyIo(object):
 	def remove_tag(self, segment, tag, start, end):
 		taglist = self.tags[str(segment)]
 		taglist.remove((tag, start, end))
+	
+	
+	def clear_tags(self, segment):
+		self.tags[str(segment)] = []

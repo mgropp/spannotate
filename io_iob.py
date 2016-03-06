@@ -182,4 +182,10 @@ class IobIo(object):
 			self.tags[segment].remove((tag, start, end))
 		
 		self._write_tags(segment)
-
+	
+	
+	def clear_tags(self, segment):
+		if segment in self.tags:
+			self.tags[segment].clear()
+		
+		self._write_tags(segment)
