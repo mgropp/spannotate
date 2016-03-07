@@ -224,7 +224,11 @@ function setTag(tag) {
 	if (tag < 0) {
 		removeTags(startIndex, endIndex);
 	} else if (tag < tagDefinitions.length) {
-		addTag(tag, startIndex, endIndex);
+		if (tagExists(tag, startIndex, endIndex)) {
+			removeTag(tag, startIndex, endIndex);
+		} else {
+			addTag(tag, startIndex, endIndex);
+		}
 	}
 }
 
@@ -241,6 +245,20 @@ function addTagDecoration(tag, startIndex, endIndex) {
 	
 	tagged.push([tag, startIndex, endIndex]);
 	updateTags();
+}
+
+function tagExists(tag, startIndex, endIndex) {
+	for (var i = 0; i < tagged.length; i++) {
+		if (
+			tagged[i][0] == tag &&
+			tagged[i][1] == startIndex &&
+			tagged[i][2] == endIndex
+		) {
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 function addTag(tag, startIndex, endIndex) {
@@ -278,6 +296,15 @@ function doAddTag(tag, startIndex, endIndex) {
 	}).error(function(jqxhr, textStatus, errorThrown) {
 		$("#document").css("background-image", "none");
 		alert(textStatus + "\n" + errorThrown);
+	});
+}
+
+function removeTag(tag, startIndex, endIndex) {
+	doRemoveTag(tag, startIndex, endIndex);
+	undoManager.add({
+		undo: function() {
+			doAddTag(tag, startIndex, endIndex);
+		}
 	});
 }
 
